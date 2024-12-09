@@ -10,7 +10,6 @@
     <div class="login-page" id="loginPage">
         <h1>Login</h1>
         <input type="text" id="username" placeholder="Enter your username" required>
-        <input type="file" id="profilePic" accept="image/*">
         <button onclick="login()">Login</button>
     </div>
 
@@ -20,6 +19,7 @@
             <ul class="online-users" id="onlineUsers"></ul>
         </div>
         <div class="chat-window">
+            <h3 id="chatWith">Chatting with: <span>None</span></h3>
             <div class="messages" id="messages"></div>
             <div class="message-input">
                 <input type="text" id="messageInput" placeholder="Type a message...">
