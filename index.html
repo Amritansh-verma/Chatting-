@@ -4,21 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Platform</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="chat-container">
-        <div class="sidebar">
+    <div class="container">
+        <h1>Chat Platform</h1>
+        <div class="active-users">
             <h2>Active Users</h2>
-            <ul class="online-users" id="onlineUsers"></ul>
+            <ul id="onlineUsers"></ul>
         </div>
-        <div class="chat-window">
-            <h3 id="chatWith">Chatting with: <span>None</span></h3>
-            <div class="messages" id="messages"></div>
-            <div class="message-input">
-                <input type="text" id="messageInput" placeholder="Type a message...">
-                <button onclick="sendMessage()">Send</button>
-            </div>
+        <div class="chat-section">
+            <h2 id="chatUser">Select a user to chat</h2>
+            <div id="chatWindow" class="chat-window"></div>
+            <input type="text" id="messageInput" placeholder="Type a message..." />
+            <button id="sendMessage">Send</button>
         </div>
     </div>
 
