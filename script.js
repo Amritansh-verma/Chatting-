@@ -1,10 +1,16 @@
 const socket = io();
-let currentChatUser = null;
 
-// Fetch active users from the server
+const userList = document.getElementById('onlineUsers');
+const chatWindow = document.getElementById('chatWindow');
+const messageInput = document.getElementById('messageInput');
+const sendMessage = document.getElementById('sendMessage');
+const chatUser = document.getElementById('chatUser');
+
+let selectedUser = null;
+
+// Update active users list
 socket.on('active-users', (users) => {
-    const userList = document.getElementById('onlineUsers');
-    userList.innerHTML = '';
+    userList.innerHTML = ''; // Clear the list
     users.forEach((user) => {
         const li = document.createElement('li');
         li.textContent = user;
@@ -13,29 +19,30 @@ socket.on('active-users', (users) => {
     });
 });
 
-// Select a user to chat
+// Select user to chat
 function selectUser(user) {
-    currentChatUser = user;
-    document.getElementById('chatWith').querySelector('span').textContent = user;
-    document.getElementById('messages').innerHTML = ''; // Clear previous chat
+    selectedUser = user;
+    chatUser.textContent = `Chatting with ${user}`;
+    chatWindow.innerHTML = ''; // Clear chat window
 }
 
-// Handle incoming messages
-socket.on('message', (data) => {
-    if (data.sender === currentChatUser || data.receiver === currentChatUser) {
-        const messagesDiv = document.getElementById('messages');
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = `${data.sender}: ${data.text}`;
-        messagesDiv.appendChild(messageDiv);
+// Send message
+sendMessage.addEventListener('click', () => {
+    if (selectedUser && messageInput.value) {
+        socket.emit('send-message', { to: selectedUser, message: messageInput.value });
+        displayMessage(`You: ${messageInput.value}`);
+        messageInput.value = ''; // Clear input
     }
 });
 
-// Send a message
-function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const message = input.value.trim();
-    if (message && currentChatUser) {
-        socket.emit('message', { text: message, receiver: currentChatUser });
-        input.value = '';
-    }
-        }
+// Display received message
+socket.on('receive-message', ({ from, message }) => {
+    displayMessage(`${from}: ${message}`);
+});
+
+// Display message in chat window
+function displayMessage(message) {
+    const p = document.createElement('p');
+    p.textContent = message;
+    chatWindow.appendChild(p);
+}
