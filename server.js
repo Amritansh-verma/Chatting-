@@ -6,28 +6,29 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-let users = [];
+let users = {}; // Key-value pairs of socket IDs and usernames
 
 io.on('connection', (socket) => {
-    socket.on('login', (username) => {
-        users.push({ id: socket.id, username });
-        io.emit('online-users', users.map((user) => user.username));
-    });
+    // Add user to the active users list
+    users[socket.id] = `User_${socket.id.substring(0, 4)}`; // Assign a default username
+    io.emit('active-users', Object.values(users));
 
+    // Handle message sending
     socket.on('message', (data) => {
-        const receiver = users.find((user) => user.username === data.receiver);
-        if (receiver) {
-            io.to(receiver.id).emit('message', data);
+        const receiverSocket = Object.keys(users).find((id) => users[id] === data.receiver);
+        if (receiverSocket) {
+            io.to(receiverSocket).emit('message', { sender: users[socket.id], text: data.text });
         }
-        io.to(socket.id).emit('message', data);
     });
 
+    // Remove user on disconnect
     socket.on('disconnect', () => {
-        users = users.filter((user) => user.id !== socket.id);
-        io.emit('online-users', users.map((user) => user.username));
+        delete users[socket.id];
+        io.emit('active-users', Object.values(users));
     });
 });
 
+// Serve static files
 app.use(express.static('public'));
 
 server.listen(3000, () => {
