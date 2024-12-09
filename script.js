@@ -1,31 +1,15 @@
 const socket = io();
-let currentUser = null;
 let currentChatUser = null;
 
-// Login function
-function login() {
-    const username = document.getElementById('username').value.trim();
-    if (username) {
-        currentUser = username;
-        socket.emit('login', username);
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('chatContainer').classList.remove('hidden');
-    } else {
-        alert('Please enter a username.');
-    }
-}
-
-// Display online users
-socket.on('online-users', (users) => {
+// Fetch active users from the server
+socket.on('active-users', (users) => {
     const userList = document.getElementById('onlineUsers');
     userList.innerHTML = '';
     users.forEach((user) => {
-        if (user !== currentUser) {
-            const li = document.createElement('li');
-            li.textContent = user;
-            li.onclick = () => selectUser(user);
-            userList.appendChild(li);
-        }
+        const li = document.createElement('li');
+        li.textContent = user;
+        li.onclick = () => selectUser(user);
+        userList.appendChild(li);
     });
 });
 
@@ -33,12 +17,12 @@ socket.on('online-users', (users) => {
 function selectUser(user) {
     currentChatUser = user;
     document.getElementById('chatWith').querySelector('span').textContent = user;
-    document.getElementById('messages').innerHTML = ''; // Clear chat history
+    document.getElementById('messages').innerHTML = ''; // Clear previous chat
 }
 
-// Display messages
+// Handle incoming messages
 socket.on('message', (data) => {
-    if (data.sender === currentChatUser || data.receiver === currentUser) {
+    if (data.sender === currentChatUser || data.receiver === currentChatUser) {
         const messagesDiv = document.getElementById('messages');
         const messageDiv = document.createElement('div');
         messageDiv.textContent = `${data.sender}: ${data.text}`;
@@ -46,12 +30,12 @@ socket.on('message', (data) => {
     }
 });
 
-// Send message
+// Send a message
 function sendMessage() {
     const input = document.getElementById('messageInput');
     const message = input.value.trim();
     if (message && currentChatUser) {
-        socket.emit('message', { sender: currentUser, receiver: currentChatUser, text: message });
+        socket.emit('message', { text: message, receiver: currentChatUser });
         input.value = '';
     }
-}
+        }
