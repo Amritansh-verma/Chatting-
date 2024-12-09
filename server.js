@@ -6,31 +6,33 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-let users = {}; // Key-value pairs of socket IDs and usernames
-
-io.on('connection', (socket) => {
-    // Add user to the active users list
-    users[socket.id] = `User_${socket.id.substring(0, 4)}`; // Assign a default username
-    io.emit('active-users', Object.values(users));
-
-    // Handle message sending
-    socket.on('message', (data) => {
-        const receiverSocket = Object.keys(users).find((id) => users[id] === data.receiver);
-        if (receiverSocket) {
-            io.to(receiverSocket).emit('message', { sender: users[socket.id], text: data.text });
-        }
-    });
-
-    // Remove user on disconnect
-    socket.on('disconnect', () => {
-        delete users[socket.id];
-        io.emit('active-users', Object.values(users));
-    });
-});
+const users = {}; // Store active users
 
 // Serve static files
 app.use(express.static('public'));
 
-server.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000');
+// Handle Socket.io connection
+io.on('connection', (socket) => {
+    console.log(`User connected: ${socket.id}`);
+    users[socket.id] = `User_${socket.id.substring(0, 4)}`; // Generate username
+
+    // Emit updated active users list
+    io.emit('active-users', Object.values(users));
+
+    // Handle chat messages
+    socket.on('send-message', ({ to, message }) => {
+        io.to(to).emit('receive-message', { from: users[socket.id], message });
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.id}`);
+        delete users[socket.id];
+        io.emit('active-users', Object.values(users)); // Update active users
+    });
+});
+
+const PORT = 3000;
+server.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
