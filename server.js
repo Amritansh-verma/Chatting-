@@ -9,19 +9,22 @@ const io = new Server(server);
 let users = [];
 
 io.on('connection', (socket) => {
-    socket.on('login', (user) => {
-        users.push(user);
-        socket.user = user;
-        io.emit('online-users', users);
+    socket.on('login', (username) => {
+        users.push({ id: socket.id, username });
+        io.emit('online-users', users.map((user) => user.username));
     });
 
-    socket.on('message', (message) => {
-        io.emit('message', message);
+    socket.on('message', (data) => {
+        const receiver = users.find((user) => user.username === data.receiver);
+        if (receiver) {
+            io.to(receiver.id).emit('message', data);
+        }
+        io.to(socket.id).emit('message', data);
     });
 
     socket.on('disconnect', () => {
-        users = users.filter((user) => user !== socket.user);
-        io.emit('online-users', users);
+        users = users.filter((user) => user.id !== socket.id);
+        io.emit('online-users', users.map((user) => user.username));
     });
 });
 
